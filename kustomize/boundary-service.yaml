@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker/docker-compose.yaml
+    kompose.version: 1.33.0 (HEAD)
+  labels:
+    io.kompose.service: boundary
+  name: boundary
+spec:
+  ports:
+    - name: "9200"
+      port: 9200
+      targetPort: 9200
+    - name: "9201"
+      port: 9201
+      targetPort: 9201
+    - name: "9202"
+      port: 9202
+      targetPort: 9202
+  selector:
+    io.kompose.service: boundary

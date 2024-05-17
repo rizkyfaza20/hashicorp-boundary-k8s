@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker/docker-compose.yaml
+    kompose.version: 1.33.0 (HEAD)
+  labels:
+    io.kompose.service: boundary
+  name: boundary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: boundary
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker/docker-compose.yaml
+        kompose.version: 1.33.0 (HEAD)
+      labels:
+        io.kompose.network/docker-default: "true"
+        io.kompose.service: boundary
+    spec:
+      containers:
+        - args:
+            - server
+            - -config
+            - /boundary/boundary.hcl
+          env:
+            - name: BOUNDARY_PG_URL
+              value: postgresql://user_boundary:x0QMsakg7vdl@ep-late-flower-943698.ap-southeast-1.aws.neon.tech/tools_boundary?sslmode=require
+            - name: HOSTNAME
+              value: boundary
+          image: hashicorp/boundary:0.15.1
+          livenessProbe:
+            exec:
+              command:
+                - wget
+                - -O-
+                - http://boundary:9200
+            failureThreshold: 5
+            periodSeconds: 3
+            timeoutSeconds: 5
+          name: boundary
+          ports:
+            - containerPort: 9200
+              hostPort: 9200
+              protocol: TCP
+            - containerPort: 9201
+              hostPort: 9201
+              protocol: TCP
+            - containerPort: 9202
+              hostPort: 9202
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /boundary
+              name: boundary-claim0
+      restartPolicy: Always
+      volumes:
+        - name: boundary-claim0
+          persistentVolumeClaim:
+            claimName: boundary-claim0
